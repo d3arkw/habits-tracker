@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 data = {"habits": []}
+index = 0
 
 
 def clear():
@@ -68,28 +69,51 @@ def del_habit(data):
     return data
 
 
-def lst_habits():
+def lst_habits(data):
     clear()
     now = datetime.now().strftime("%Y.%m.%d")
     if len(data["habits"]) > 0:
         for i, d in enumerate(data["habits"], start=1):
             print(
-                f"{i}. {d['name']} | Streak: {d['streak']} | {'Выполнено' if d['last_done'] == now else 'Не выполнено'}"
+                f"{i}. {d['name']} | Серия: {d['streak']} | {'Выполнено' if d['last_done'] == now else 'Не выполнено'}"
             )
     else:
         print("Список пуст")
+    return data
+
+
+def update_streak(data, index):
+    if data["habits"][index]["last_done"] is None:
+        data["habits"][index]["streak"]+= 1
+        return
+    now = datetime.now().date()
+    last = (
+        datetime.strptime(data["habits"][index]["last_done"], "%Y.%m.%d").date()
+    )
+    diff = now - last
+    if diff.days == 1:
+        data["habits"][index]["streak"] += 1
+    elif diff.days > 1:
+        data["habits"][index]["streak"] = 1
+    elif diff.days == 0:
+        print("Уже выполнялось сегодня!")
+    return data
 
 
 def get_done(data):
-    lst_habits()
+    lst_habits(data)
     if len(data["habits"]) > 0:
         try:
             index = int(input("Введите номер выполненной привычки:")) - 1
-            now = datetime.now().strftime("%Y.%m.%d")
-            if data["habits"][index]["last_done"] == now:
-                print('Уже выполнено!!')
+            if 0 <= index < len(data["habits"]):
+                now = datetime.now().strftime("%Y.%m.%d")
+                if data["habits"][index]["last_done"] == now:
+                    print("Уже выполнено!!")
+                else:
+                    update_streak(data, index)
+                    data["habits"][index]["last_done"] = now
             else:
-                data["habits"][index]["last_done"] = now
+                print('Введите верное число!')
         except (ValueError, TypeError):
             print("Введите число!")
         dump(data)
@@ -110,12 +134,12 @@ while True:
     if sel == 1:
         data = add_habit(data)
     elif sel == 2:
-        lst_habits()
+        lst_habits(data)
         data = del_habit(data)
     elif sel == 3:
-        lst_habits()
+        lst_habits(data)
     elif sel == 4:
-        data = get_done(data)
+        data, index = get_done(data)
     elif sel == 5:
         data = clear_json(data)
     elif sel == 6:
