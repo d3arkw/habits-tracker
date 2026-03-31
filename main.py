@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 
 data = {"habits": []}
 
@@ -69,11 +70,30 @@ def del_habit(data):
 
 def lst_habits():
     clear()
+    now = datetime.now().strftime("%Y.%m.%d")
     if len(data["habits"]) > 0:
         for i, d in enumerate(data["habits"], start=1):
-            print(f"{i}. {d['name']} | Streak: {d['streak']}")
+            print(
+                f"{i}. {d['name']} | Streak: {d['streak']} | {'Выполнено' if d['last_done'] == now else 'Не выполнено'}"
+            )
     else:
         print("Список пуст")
+
+
+def get_done(data):
+    lst_habits()
+    if len(data["habits"]) > 0:
+        try:
+            index = int(input("Введите номер выполненной привычки:")) - 1
+            now = datetime.now().strftime("%Y.%m.%d")
+            if data["habits"][index]["last_done"] == now:
+                print('Уже выполнено!!')
+            else:
+                data["habits"][index]["last_done"] = now
+        except (ValueError, TypeError):
+            print("Введите число!")
+        dump(data)
+    return data
 
 
 def menu():
@@ -95,7 +115,7 @@ while True:
     elif sel == 3:
         lst_habits()
     elif sel == 4:
-        print("В разработке!")
+        data = get_done(data)
     elif sel == 5:
         data = clear_json(data)
     elif sel == 6:
