@@ -1,31 +1,77 @@
-# Habit Tracker (CLI)
+📈 Habit Tracker
 
-A simple command-line app to track your habits.
+A simple backend-oriented Python project for tracking daily habits with JSON-based storage.
 
-## Features
+⸻
 
-- add habits  
-- delete habits  
-- view habits list  
-- mark habits as done  
-- streak tracking  
-- data saved in JSON  
+📌 Description
 
-## How it works
+This project allows you to create habits, track daily completion, and maintain streaks.
+All data is stored locally in a JSON file, simulating a simple backend persistence layer.
 
-All habits are stored in a file, so data is not lost after restarting the program.
+⸻
 
-Each habit has:
-- name  
-- streak  
-- last completion date  
+⚙️ Features
+ • Add and delete habits
+ • Mark habits as completed
+ • Automatic streak calculation
+ • JSON-based data storage
+ • Error handling (invalid input, edge cases)
+ • Basic date tracking
 
-## Plans
+⸻
 
-- add multilingual support (RU / EN)  
-- improve code structure  
+🧠 How It Works
+ • Each habit is stored in a JSON structure
+ • When a habit is completed:
+ • If it’s the next day → streak increases
+ • If skipped → streak resets
+ • The system tracks last completion date
 
-## Run
+⸻
 
-```bash
+🛠 Tech Stack
+ • Python
+ • JSON
+
+ ⸻
+
+🖼 Screenshots
+
+ ⸻
+
+📄 Example Data
+
+{
+  "habits": [
+    {
+      "name": "Training",
+      "streak": 6,
+      "last_done": "2026.04.01"
+    }
+  ]
+}
+
+⸻
+
+▶️ How to Run
+
+git clone https://github.com/d3arkw/habit-tracker
+cd habit-tracker
 python main.py
+
+⸻
+
+📁 Project Structure
+
+habit-tracker/
+│── main.py
+│── example.json
+│── assets/
+
+⸻
+
+🚀 Future Improvements
+ • CLI improvements
+ • Better data validation
+ • Transition to database (SQLite)
