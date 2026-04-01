@@ -10,6 +10,14 @@ def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
+def chek_len():
+    return len(data["habits"]) > 0
+
+
+def chek_ent(index):
+    return 0 <= index < len(data["habits"])
+
+
 def input_tr(a):
     while True:
         try:
@@ -37,7 +45,7 @@ def load(filename="myp"):
 
 def clear_json(data, filename="myp"):
     clear()
-    if len(data["habits"]) > 0:
+    if chek_len():
         with open(filename, "w", encoding="utf-8") as f:
             data = {"habits": []}
             dump(data)
@@ -45,6 +53,15 @@ def clear_json(data, filename="myp"):
     else:
         print("Список и так пуст!")
     return data
+
+
+def get_last(data, index):
+    now = datetime.now().strftime("%Y.%m.%d")
+    if data["habits"][index]["last_done"] == now:
+        print("Уже выполнено!!")
+    else:
+        update_streak(data, index)
+        data["habits"][index]["last_done"] = now
 
 
 def add_habit(data):
@@ -56,10 +73,10 @@ def add_habit(data):
 
 
 def del_habit(data):
-    if len(data["habits"]) > 0:
+    if chek_len():
         try:
             index = int(input("Введите номер: ")) - 1
-            if 0 <= index < len(data["habits"]):
+            if chek_ent(index):
                 data["habits"].pop(index)
                 return data
             else:
@@ -72,7 +89,7 @@ def del_habit(data):
 def lst_habits(data):
     clear()
     now = datetime.now().strftime("%Y.%m.%d")
-    if len(data["habits"]) > 0:
+    if chek_len():
         for i, d in enumerate(data["habits"], start=1):
             print(
                 f"{i}. {d['name']} | Серия: {d['streak']} | {'Выполнено' if d['last_done'] == now else 'Не выполнено'}"
@@ -84,12 +101,10 @@ def lst_habits(data):
 
 def update_streak(data, index):
     if data["habits"][index]["last_done"] is None:
-        data["habits"][index]["streak"]+= 1
+        data["habits"][index]["streak"] += 1
         return
     now = datetime.now().date()
-    last = (
-        datetime.strptime(data["habits"][index]["last_done"], "%Y.%m.%d").date()
-    )
+    last = datetime.strptime(data["habits"][index]["last_done"], "%Y.%m.%d").date()
     diff = now - last
     if diff.days == 1:
         data["habits"][index]["streak"] += 1
@@ -102,18 +117,13 @@ def update_streak(data, index):
 
 def get_done(data):
     lst_habits(data)
-    if len(data["habits"]) > 0:
+    if chek_len():
         try:
             index = int(input("Введите номер выполненной привычки:")) - 1
-            if 0 <= index < len(data["habits"]):
-                now = datetime.now().strftime("%Y.%m.%d")
-                if data["habits"][index]["last_done"] == now:
-                    print("Уже выполнено!!")
-                else:
-                    update_streak(data, index)
-                    data["habits"][index]["last_done"] = now
+            if chek_ent(index):
+                get_last(data, index)
             else:
-                print('Введите верное число!')
+                print("Введите верное число!")
         except (ValueError, TypeError):
             print("Введите число!")
         dump(data)
@@ -139,7 +149,7 @@ while True:
     elif sel == 3:
         lst_habits(data)
     elif sel == 4:
-        data, index = get_done(data)
+        data = get_done(data)
     elif sel == 5:
         data = clear_json(data)
     elif sel == 6:
