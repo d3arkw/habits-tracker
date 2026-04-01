@@ -38,6 +38,10 @@ All data is stored locally in a JSON file, simulating a simple backend persisten
 
 🖼 Screenshots
 
+![Menu](./assets/menu.png)
+![Add Habit](./assets/add.png)
+![Progress](./assets/progress.png)
+
  ⸻
 
 📄 Example Data
