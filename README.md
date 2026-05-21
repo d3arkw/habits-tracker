@@ -73,9 +73,14 @@ This project allows you to create habits, track daily completion, and maintain s
   ⸻
 
 📁 Project Structure
-  password-manager/
-  │── main.py          # Application entry point and API routers
-  │── schemas.py       # Pydantic models and data validation rules
-  │── database.py      # Temporary in-memory data store (db = [])
-  │── requirements.txt # Project dependencies
-  └── .gitignore       # Git configuration file
+  habit-tracker/
+  │── main.py          # Main application code and CLI loop
+  │── .gitignore       # Standard git configuration (ignores *.db files)
+  └── database.db      # SQLite database file (auto-generated on first run)
+  
+  ⸻
+ 🚀 Future Improvements
+
+-- Dynamic streak reset tracking if a day is skipped
+-- Transition from CLI a web interface or modern GUI
+-- Advanced data visualization
