@@ -1,40 +1,57 @@
-📈 Habit Tracker
+# 📈 Habit Tracker (SQLite Version)
 
-A simple backend-oriented Python project for tracking daily habits with JSON-based storage.
+A console-based Python project for tracking daily habits with SQLite database storage and multi-language support.
 
 ⸻
 
 📌 Description
 
-This project allows you to create habits, track daily completion, and maintain streaks.
-All data is stored locally in a JSON file, simulating a simple backend persistence layer.
+This project allows you to create habits, track daily completion, and maintain streaks. All data is stored locally in an SQLite database, ensuring reliable data persistence, relational logging, and automatic history cleanup.
 
 ⸻
 
 ⚙️ Features
- • Add and delete habits
- • Mark habits as completed
- • Automatic streak calculation
- • JSON-based data storage
- • Error handling (invalid input, edge cases)
- • Basic date tracking
+• **Add and delete habits** (with automatic cascade deletion of related logs)
+• **Mark habits as completed** (with protection against duplicate checks on the same day)
+• **Automatic streak calculation** based on daily completions
+• **Multi-language support** (Russian and English available at startup)
+• **SQLite database storage** utilizing relational tables
+• **Robust error handling** (input validation, out-of-bounds index protection)
+• **Clear database tool** to reset your tracker easily
 
 ⸻
 
 🧠 How It Works
- • Each habit is stored in a JSON structure
- • When a habit is completed:
- • If it’s the next day → streak increases
- • If skipped → streak resets
- • The system tracks last completion date
+• Data is stored in a local `database.db` file using two connected tables: `habits` and `habit_logs`.
+• When a habit is marked as completed:
+  • The system queries the logs to see if it has already been done today.
+  • If it's a new completion for the day, a log entry is created, and the streak increments.
+• Deleting a habit automatically purges its entire completion log due to `ON DELETE CASCADE` constraints.
 
 ⸻
 
 🛠 Tech Stack
- • Python
- • JSON
+• Python 3
+• SQLite (`sqlite3`)
 
- ⸻
+⸻
+
+📊 Database Schema
+
+### `habits` Table
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| **id** | INTEGER PRIMARY KEY AUTOINCREMENT | Unique identifier for each habit |
+| **name** | TEXT | The name of your habit |
+| **streak** | INTEGER | Current consecutive completion count |
+
+### `habit_logs` Table
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| **habit_id** | INTEGER | Foreign key referencing `habits(id)` |
+| **log_date** | TEXT | Date string formatted as `YYYY-MM-DD` |
+
+⸻
 
 🖼 Screenshots
 
@@ -44,38 +61,21 @@ All data is stored locally in a JSON file, simulating a simple backend persisten
 
  ⸻
 
-📄 Example Data
-
-{
-  "habits": [
-    {
-      "name": "Training",
-      "streak": 6,
-      "last_done": "2026.04.01"
-    }
-  ]
-}
-
-⸻
-
 ▶️ How to Run
 
-git clone https://github.com/d3arkw/habit-tracker
-cd habit-tracker
-python main.py
-
-⸻
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/d3arkw/habit-tracker](https://github.com/d3arkw/habit-tracker)
+   cd habit-tracker
+2. Run the application:
+    python main.py
+  
+  ⸻
 
 📁 Project Structure
-
-habit-tracker/
-│── main.py
-│── example.json
-│── assets/
-
-⸻
-
-🚀 Future Improvements
- • CLI improvements
- • Better data validation
- • Transition to database (SQLite)
+  password-manager/
+  │── main.py          # Application entry point and API routers
+  │── schemas.py       # Pydantic models and data validation rules
+  │── database.py      # Temporary in-memory data store (db = [])
+  │── requirements.txt # Project dependencies
+  └── .gitignore       # Git configuration file
