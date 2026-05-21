@@ -1,13 +1,22 @@
-import json
 import os
-from datetime import datetime
+import sqlite3
+pathdb = os.path.join(os.path.dirname(__file__), "database.db")
 
+
+def init_db():
+    connection = sqlite3.connect(pathdb)
+    cursor = connection.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS habits (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                   name TEXT,
+                   streak INTEGER);''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS habit_logs(habit_id INTEGER,
+                   log_date TEXT,
+                   FOREIGN KEY(habit_id) REFERENCES habits(id) ON DELETE CASCADE);''')
 
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-data = {"habits": []}
 sel_language = "en"
 
 
@@ -64,12 +73,12 @@ def sel_lang(sel_language):
 sel_language = sel_lang(sel_language)
 
 
-def has_habits(data):
-    return len(data["habits"]) > 0
+def has_habits(habits):
+    return len(habits) <= 0
 
 
-def is_valid(data, index):
-    return 0 <= index < len(data["habits"])
+def is_valid(habits, index_us):
+    return 0 < index_us <= len(habits)
 
 
 def input_tr(a):
@@ -81,130 +90,114 @@ def input_tr(a):
             print(translate("input_int"))
 
 
-def dump(data, filename="myp"):
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+def mark_done(id):
+    with sqlite3.connect(pathdb) as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM habit_logs WHERE habit_id = ? AND log_date = date('now');", (id,))
+        count = cursor.fetchone()[0]
+        if count == 0:
+            cursor.execute("INSERT INTO habit_logs (habit_id, log_date) VALUES (?, date('now'))", (id,))
+            cursor.execute("UPDATE habits SET streak = streak + 1 WHERE id = ?", (id,))
+        else:
+            print(translate('done'))
+    
 
 
-def load(filename="myp"):
-    try:
-        with open(filename, "r") as f:
-            data = json.load(f)
-            return data
-    except FileNotFoundError:
-        data = {"habits": []}
-        dump(data, filename)
-        return data
-
-
-def clear_json(data, filename="myp"):
-    clear()
-    if has_habits(data):
-        with open(filename, "w", encoding="utf-8") as f:
-            data = {"habits": []}
-            dump(data)
-        print(translate("clear"))
-    else:
-        print(translate("cleaned"))
-    return data
-
-
-def mark_done(data, index):
-    now = datetime.now().strftime("%Y.%m.%d")
-    if data["habits"][index]["last_done"] == now:
-        print(translate("done"))
-    else:
-        update_streak(data, index)
-        data["habits"][index]["last_done"] = now
-
-
-def add_habit(data):
+def add_habit():
     clear()
     name = input(translate("add_habit"))
-    data["habits"].append({"name": name, "streak": 0, "last_done": None})
-    dump(data)
-    return data
+    with sqlite3.connect(pathdb) as connection:
+        cursor = connection.cursor()
+        cursor.execute('''INSERT INTO habits (name,streak)
+                       VALUES (?,0)''', (name,))
 
 
-def del_habit(data):
-    if has_habits(data):
-        try:
-            index = int(input(translate("input_num"))) - 1
-            if is_valid(data, index):
-                data["habits"].pop(index)
-                return data
-            else:
-                print(translate("inp_correct"))
-        except (ValueError, TypeError):
-            print(translate("input_int"))
-    return data
+def del_habit(id):
+    with sqlite3.connect(pathdb) as connection:
+        cursor = connection.cursor()
+        cursor.execute('PRAGMA foreign_keys = ON')
+        cursor.execute("DELETE FROM habits WHERE id = ?", (id,))
 
 
-def lst_habits(data):
+def lst_habits():
     clear()
-    now = datetime.now().strftime("%Y.%m.%d")
-    if has_habits(data):
-        for i, d in enumerate(data["habits"], start=1):
-            print(
-                f"{i}. {d['name']} | {translate("streak")} {d['streak']} | {'✅' if d['last_done'] == now else '❌'}"
-            )
-    else:
-        print(translate("list_clean"))
-    return data
+    with sqlite3.connect(pathdb) as connection:
+        cursor = connection.cursor()
+        cursor.execute('''SELECT habits.id, habits.name, habits.streak, habit_logs.log_date 
+                        FROM habits 
+                        LEFT JOIN habit_logs ON habits.id = habit_logs.habit_id AND habit_logs.log_date = date('now');''')
+        habits = cursor.fetchall()
+    if has_habits(habits):
+        print(translate('list_clean'))
+        return habits
+    for num, habit in enumerate(habits,start=1):
+        print(f"{num}. {habit[1]} | {translate('streak')} {habit[2]} | {'✅' if habit[3] != None else '❌'}")
+    return habits
 
 
-def update_streak(data, index):
-    if data["habits"][index]["last_done"] is None:
-        data["habits"][index]["streak"] += 1
+def get_done():
+    clear()
+    habits = lst_habits()
+    if has_habits(habits):
         return
-    now = datetime.now().date()
-    last = datetime.strptime(data["habits"][index]["last_done"], "%Y.%m.%d").date()
-    diff = now - last
-    if diff.days == 1:
-        data["habits"][index]["streak"] += 1
-    elif diff.days > 1:
-        data["habits"][index]["streak"] = 1
-    elif diff.days == 0:
-        print(translate("done_yet"))
-    return data
+    try:
+        index_us = int(input(translate('input_num')))
+        if is_valid(habits, index_us):
+            index = index_us - 1
+            mark_done(habits[index][0])
+        else:
+            print(translate('inp_correct'))
+    except ValueError:
+        print(translate('input_int'))
 
-
-def get_done(data):
+def get_delete():
     clear()
-    lst_habits(data)
-    if has_habits(data):
-        try:
-            index = int(input(translate("inp_num_habbit"))) - 1
-            if is_valid(data, index):
-                mark_done(data, index)
-            else:
-                print(translate("inp_correct"))
-        except (ValueError, TypeError):
-            print(translate("input_int"))
-        dump(data)
-    return data
+    habits = lst_habits()
+    if has_habits(habits):
+        return
+    try:
+        index_us = int(input(translate('input_num')))
+        if is_valid(habits, index_us):
+            index = index_us - 1
+            del_habit(habits[index][0])
+        else:
+            print(translate('inp_correct'))
+    except ValueError:
+        print(translate('inp_correct'))
 
 
 def menu():
     print(translate("menu"))
 
 
+def clear_db():
+    clear()
+    habits = lst_habits()
+    if len(habits) > 0:
+        with sqlite3.connect(pathdb) as connection:
+            cursor = connection.cursor()
+            cursor.execute('PRAGMA foreign_keys = ON')
+            cursor.execute('DELETE FROM habits')
+            print(translate('clear'))
+
+
+init_db()
+
+
 print(translate("prin"))
-data = load()
 while True:
     menu()
     sel = input_tr(translate("sel_menu"))
     if sel == 1:
-        data = add_habit(data)
+        add_habit()
     elif sel == 2:
-        lst_habits(data)
-        data = del_habit(data)
+        get_delete()
     elif sel == 3:
-        lst_habits(data)
+        lst_habits()
     elif sel == 4:
-        data = get_done(data)
+        get_done()
     elif sel == 5:
-        data = clear_json(data)
+        clear_db()
     elif sel == 6:
         clear()
         print(translate("bye"))
